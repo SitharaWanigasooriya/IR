@@ -12,9 +12,15 @@ class BaiscopeCrawl(SitemapSpider):
 
     #
 
+    def sitemap_filter(self, entries):
+        for entry in entries:
+            date_time = datetime.strptime(entry['lastmod'][:-6], '%Y-%m-%dT%H:%M:%S')
+            if date_time.year == 2019:
+                print(date_time)
+                yield entry
 
     def parse(self, response):
-        for element  in response.xpath('//div[@class="post-inner"]'):
+        for element in response.xpath('//div[@class="post-inner"]'):
             content = element.xpath('./div[@class="entry"]/p/span/text()').getall()
             filtered_content = element.xpath('./div[@class="entry"]/p/span/text()').getall()[:len(content)-4]
             subtitle_description = ''
