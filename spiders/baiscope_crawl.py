@@ -21,6 +21,16 @@ class BaiscopeCrawl(SitemapSpider):
 
     def parse(self, response):
         for element in response.xpath('//div[@class="post-inner"]'):
+
+            englishTitle = element.xpath('./h1[@class="name post-title entry-title"]/span/text()').get().split('|')[0]
+            sinhalaTitle = element.xpath('./h1[@class="name post-title entry-title"]/span/text()').get().split('|')[1]
+
+            relevantStatus = ''
+            status =element.xpath('//*[@id="the-post"]/div/p/span[2]/a/text()').getall()
+            for state in status:
+                if (state != 'All' and state != 'Featured Articles' and state != 'Sinhala Subtitle'):
+                    relevantStatus += state+','
+
             content = element.xpath('./div[@class="entry"]/p/span/text()').getall()
             filtered_content = element.xpath('./div[@class="entry"]/p/span/text()').getall()[:len(content)-4]
             subtitle_description = ''
@@ -28,9 +38,12 @@ class BaiscopeCrawl(SitemapSpider):
                 subtitle_description += para.strip("\n")
 
             yield {
-                'title': element.xpath('./h1[@class="name post-title entry-title"]/span/text()').get(),
+                'englishTitle': englishTitle,
+                'sinhalaTitle': sinhalaTitle,
                 'date': element.xpath('./p[@class="post-meta"]/span/text()').getall()[0],
                 'views': element.xpath('./p[@class="post-meta"]/span/text()').getall()[-1],
+                'noOfComments': element.xpath('//*[@id="the-post"]/div/p/span[3]/a/text()').get(),
+                'status': relevantStatus,
                 'content': subtitle_description,
             }
 
