@@ -9,7 +9,7 @@ class BaiscopeCrawl(SitemapSpider):
     sitemap_urls = ['https://www.baiscopelk.com/sitemap.xml']
     sitemap_follow = ["^.*https://www.baiscopelk.com/sitemap-pt-post-.*$"]
     sitemap_rules = [('^.*-sinhala-subtitles/.*$', 'parse')]
-
+    count = 0
     #
 
     def sitemap_filter(self, entries):
@@ -21,7 +21,7 @@ class BaiscopeCrawl(SitemapSpider):
 
     def parse(self, response):
         for element in response.xpath('//div[@class="post-inner"]'):
-
+            self.count+=1
             englishTitle = element.xpath('./h1[@class="name post-title entry-title"]/span/text()').get().split('|')[0]
             sinhalaTitle = element.xpath('./h1[@class="name post-title entry-title"]/span/text()').get().split('|')[1]
 
@@ -31,6 +31,18 @@ class BaiscopeCrawl(SitemapSpider):
                 if (state != 'All' and state != 'Featured Articles' and state != 'Sinhala Subtitle'):
                     relevantStatus += state+','
 
+            views = (element.xpath('./p[@class="post-meta"]/span/text()').getall()[-1]).split(' ')[0].strip(' ')
+            newViews =''
+            for digit in views:
+                if(digit != ',' ):
+                    newViews+=digit
+
+            noOfComments = element.xpath('//*[@id="the-post"]/div/p/span[3]/a/text()').get().split(' ')[0].strip(' ')
+            newNoOfComments = ''
+            for digit in noOfComments:
+                if(digit != ','):
+                    newNoOfComments+=digit
+
             content = element.xpath('./div[@class="entry"]/p/span/text()').getall()
             filtered_content = element.xpath('./div[@class="entry"]/p/span/text()').getall()[:len(content)-4]
             subtitle_description = ''
@@ -38,12 +50,13 @@ class BaiscopeCrawl(SitemapSpider):
                 subtitle_description += para.strip("\n")
 
             yield {
-                'englishTitle': englishTitle,
-                'sinhalaTitle': sinhalaTitle,
+                'id': self.count,
+                'englishTitle': englishTitle.strip(),
+                'sinhalaTitle': sinhalaTitle.strip(),
                 'date': element.xpath('./p[@class="post-meta"]/span/text()').getall()[0],
-                'views': element.xpath('./p[@class="post-meta"]/span/text()').getall()[-1],
-                'noOfComments': element.xpath('//*[@id="the-post"]/div/p/span[3]/a/text()').get(),
+                'views': int(newViews),
+                'noOfComments': int(newNoOfComments),
                 'status': relevantStatus,
-                'content': subtitle_description,
+                'content': subtitle_description.strip(),
             }
 
